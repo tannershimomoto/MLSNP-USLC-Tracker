@@ -4,8 +4,10 @@ import LogMatch from '../components/LogMatch'
 import PlayerTracker from '../components/PlayerTracker'
 import PlayerProfiles from '../components/PlayerProfiles'
 import MatchLog from '../components/MatchLog'
+import ClubComparison from '../components/ClubComparison'
+import ExportButton from '../components/ExportButton'
 
-const TABS = ['+ Log match', 'Player tracker', 'Player profiles', 'Match log']
+const TABS = ['+ Log match', 'Player tracker', 'Club minutes', 'Player profiles', 'Match log']
 
 export default function Home() {
   const [league, setLeague] = useState('mnp')
@@ -37,15 +39,18 @@ export default function Home() {
 
   function handlePlayerClick(player) {
     setSelectedPlayer(player)
-    setTab(2)
+    setTab(3)
   }
 
   function handleBack() {
     setSelectedPlayer(null)
   }
 
-  function handleSaved() {
-    fetchData()
+  function handleAgencyUpdate(playerId, agency) {
+    setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, agency } : p))
+    if (selectedPlayer && selectedPlayer.id === playerId) {
+      setSelectedPlayer(prev => ({ ...prev, agency }))
+    }
   }
 
   return (
@@ -71,33 +76,36 @@ export default function Home() {
               </h1>
               <div style={{ fontSize: 12, color: '#6b7280' }}>Born 2008–2012 · 2026–27 Season</div>
             </div>
+            <div style={{ marginLeft: 'auto' }}>
+              <ExportButton league={league} />
+            </div>
           </div>
 
           {/* League switcher */}
           <div style={{ display: 'flex', marginBottom: '1.5rem', border: '0.5px solid #d1d5db', borderRadius: 8, overflow: 'hidden', width: 'fit-content' }}>
             {[['mnp','MLS NEXT Pro'],['usl','USL Championship']].map(([key, label], i) => (
-              <>
-                {i > 0 && <div key="div" style={{ width: '0.5px', background: '#d1d5db' }} />}
-                <button key={key} onClick={() => setLeague(key)} style={{
+              <span key={key} style={{ display: 'contents' }}>
+                {i > 0 && <div style={{ width: '0.5px', background: '#d1d5db' }} />}
+                <button onClick={() => setLeague(key)} style={{
                   padding: '8px 20px', fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer',
                   background: league === key ? accent : 'white',
                   color: league === key ? 'white' : '#6b7280'
                 }}>{label}</button>
-              </>
+              </span>
             ))}
           </div>
 
           {/* Main card */}
           <div style={{ background: 'white', borderRadius: 12, border: '0.5px solid #e5e7eb', padding: '1.25rem 1.5rem' }}>
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: '1.5rem', borderBottom: '0.5px solid #e5e7eb' }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: '1.5rem', borderBottom: '0.5px solid #e5e7eb', overflowX: 'auto' }}>
               {TABS.map((t, i) => (
-                <button key={i} onClick={() => { setTab(i); if (i !== 2) setSelectedPlayer(null) }} style={{
+                <button key={i} onClick={() => { setTab(i); if (i !== 3) setSelectedPlayer(null) }} style={{
                   padding: '8px 16px', fontSize: 14, border: 'none', background: 'none', cursor: 'pointer',
                   borderBottom: tab === i ? `2px solid ${accent}` : '2px solid transparent',
                   color: tab === i ? accent : '#6b7280',
                   fontWeight: tab === i ? 500 : 400,
-                  marginBottom: -1
+                  marginBottom: -1, whiteSpace: 'nowrap'
                 }}>{t}</button>
               ))}
             </div>
@@ -106,10 +114,27 @@ export default function Home() {
               <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280', fontSize: 13 }}>Loading...</div>
             ) : (
               <>
-                {tab === 0 && <LogMatch league={league} existingPlayers={players} onSaved={handleSaved} />}
+                {tab === 0 && <LogMatch league={league} existingPlayers={players} onSaved={fetchData} />}
                 {tab === 1 && <PlayerTracker players={players} league={league} onPlayerClick={handlePlayerClick} />}
-                {tab === 2 && <PlayerProfiles players={players} league={league} selectedPlayer={selectedPlayer} onPlayerClick={handlePlayerClick} onBack={handleBack} />}
-                {tab === 3 && <MatchLog matches={matches} />}
+                {tab === 2 && <ClubComparison players={players} league={league} />}
+                {tab === 3 && (
+                  <PlayerProfiles
+                    players={players}
+                    league={league}
+                    selectedPlayer={selectedPlayer}
+                    onPlayerClick={handlePlayerClick}
+                    onBack={handleBack}
+                    onAgencyUpdate={handleAgencyUpdate}
+                  />
+                )}
+                {tab === 4 && (
+                  <MatchLog
+                    matches={matches}
+                    league={league}
+                    existingPlayers={players}
+                    onRefresh={fetchData}
+                  />
+                )}
               </>
             )}
           </div>
