@@ -1,3 +1,4 @@
+// v2 - fixed league filter
 import { supabase } from '../../lib/supabase'
 
 export default async function handler(req, res) {
