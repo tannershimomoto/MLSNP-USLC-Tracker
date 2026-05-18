@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   const { league } = req.query
   if (!league) return res.status(400).json({ error: 'league required' })
 
- const { data, error } = await supabase
+const { data, error } = await supabase
   .from('appearances')
   .select(`
     minutes, goals, assists,
