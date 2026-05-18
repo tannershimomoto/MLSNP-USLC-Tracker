@@ -4,15 +4,14 @@ export default async function handler(req, res) {
   const { league } = req.query
   if (!league) return res.status(400).json({ error: 'league required' })
 
-  const { data, error } = await supabase
-    .from('appearances')
-    .select(`
-      minutes, goals, assists,
-      players!inner(id, name, team, position, birth_year, league),
-      matches!inner(id, home_team, away_team, score, match_date, league)
-    `)
-    .eq('players.league', league)
-    .eq('matches.league', league)
+ const { data, error } = await supabase
+  .from('appearances')
+  .select(`
+    minutes, goals, assists,
+    players!inner(id, name, team, position, birth_year),
+    matches!inner(id, home_team, away_team, score, match_date, league)
+  `)
+  .eq('matches.league', league)
 
   if (error) return res.status(500).json({ error: error.message })
 
